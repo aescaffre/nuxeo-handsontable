@@ -1,0 +1,83 @@
+<html>
+<header>
+<script src="lib/jquery-1.10.2.js"></script>
+<script src="lib/nuxeo.js"></script>
+<script src="lib/jquery.handsontable.full.js"></script>
+<link rel="stylesheet" media="screen" href="css/jquery.handsontable.full.css">
+</header>
+<body>
+<input type = "button" value="Save" onclick="saveChangedDocuments()" />
+<div id="example1" style="width:1200px; height: 500px; overflow: auto"></div>
+
+       
+<script>
+
+var listToUpdate ={};
+
+function saveChangedDocuments(){
+  for (var key in listToUpdate) {
+    if (listToUpdate.hasOwnProperty(key)) {
+        client.request("/id/" + key).put({data: listToUpdate[key]});
+        console.log (listToUpdate[key].title);
+    }
+}
+};
+
+function firstRowRenderer(instance, td, row, col, prop, value, cellProperties) {
+  Handsontable.renderers.TextRenderer.apply(this, arguments);
+  td.style.fontWeight = 'bold';
+  td.style.color = 'green';
+  td.style.background = '#CEC';
+};
+
+var connectInfo={
+baseURL:"http://localhost:8080/nuxeo",
+username:"Administrator",
+password:"Administrator",
+schemas:"dublincore"
+};
+
+var client = new nuxeo.Client(connectInfo);
+ client.operation('Document.Query')
+        .params({
+          query: 'SELECT * FROM Document'
+        })
+        .execute(function(error, data) {
+          if (error) {
+            throw error;
+          }
+          console.log(data);
+          var myData =data.entries ;
+
+
+$("#example1").handsontable({
+  data: myData,
+  colHeaders: ['Id','Title','Description'],
+  columns: [
+    {data: "uid"},
+    {data: "properties.dc:title"},
+    {data: "properties.dc:description"},
+
+  ],
+  afterChange: function (change, source) {console.log(change); console.log(source);
+    for (var i =0; i<change.length; i++){
+      listToUpdate[(myData[change[i][0]].uid)]=myData[change[i][0]];
+    }
+
+  },
+  colWidths: [200, 200,100],
+
+  rowHeaders: true,
+  colHeaders: true,
+  stretchH: 'last',
+  minSpareRows: 1,
+  contextMenu: true
+})});
+</script>
+
+
+
+</body>
+
+
+</HTML>
