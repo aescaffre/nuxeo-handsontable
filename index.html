@@ -70,14 +70,16 @@
                 if (error) {
                     throw error;
                 }
-                var myData = data.entries;
+                var myData = data.entries
                 $("#example2").handsontable({
                     data: myData,
                     colHeaders: ['Id', 'Title', 'Date', 'Description', 'username'],
                     columns: [{
-                        data: "uid"
+                        data: "uid",
+                         readOnly: true
                     }, {
-                        data: "properties.dc:title"
+                        data: "properties.dc:title",
+                         readOnly: true
                     }, {
                         data: "properties.dc:created",
                         type: 'date',
@@ -102,16 +104,21 @@
                             width: "resolve"
                         }
                     }],
+                    rowHeaders: true,
+                    manualColumnResize: true,
+                    minSpareRows: 1,
+                    currentRowClassName: 'currentRow',
+                    currentColClassName: 'currentCol',
+                    contextMenu: [ "undo", "redo", "sep1", "sep2", "sep3"],
                     afterChange: function (change, source) {
-                        console.log(change);
-                        console.log(source);
+                       if (change!=null){
                         for (var i = 0; i < change.length; i++) {
                             listToUpdate[(myData[change[i][0]].uid)] = myData[change[i][0]];
                         }
+                      }
                     },
-                    rowHeaders: true,
-                    minSpareRows: 1,
-                    contextMenu: true
+                    search: true
+
                 });
             });
     </script>
