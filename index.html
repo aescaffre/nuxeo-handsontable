@@ -13,22 +13,16 @@
 </header>
 
 <body>
+    <input id ="query" type="text" size="70" placeholder="SELECT * FROM Document"/>
+        <button onclick="drawTable(document.getElementById('query').value)">Execute</button>
     <div id="example2" style="width: 980px; height: 300px; overflow: scroll"></div>
     <p>
         <button onclick="saveChangedDocuments()">Save</button>
     </p>
     <script>
+
+       function changeQuery(){};
         var listToUpdate = {};
-        var optionsList = [{
-            id: "1",
-            text: 'jsmith'
-        }, {
-            id: "2",
-            text: 'wjones'
-        }, {
-            id: "Administrator",
-            text: 'THe Administrator'
-        }];
 
         function getDefaultLabel(item) {
             console.log(item);
@@ -62,11 +56,14 @@
             schemas: "dublincore"
         };
         var client = new nuxeo.Client(connectInfo);
+        function drawTable(queryString){
+          console.log(queryString);
         client.operation('Document.Query')
             .params({
-                query: 'SELECT * FROM Document where ecm:primaryType IN (\'File\',\'Folder\',\'Workspace\',\'Note\')'
+                query: queryString
             })
             .execute(function (error, data) {
+             
                 if (error) {
                     throw error;
                 }
@@ -120,7 +117,8 @@
                     search: true
 
                 });
-            });
+            });}
+  drawTable('SELECT * FROM Document');
     </script>
 </body>
 
