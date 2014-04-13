@@ -78,8 +78,8 @@
                     var myData = data.entries
                     $("#example2").handsontable({
                         data: myData,
-                        colHeaders: ['Title', 'Description', 'Creator', 'Date of creation'],
-                        colWidths: [200, 400, 120, 100],
+                        colHeaders: ['Title', 'Description', 'Nature',  'Validation date','Creator','Date of creation'],
+                        colWidths: [200, 400, 120, 120,120],
                         columns: [ {
                             data: "properties.dc:title",
                             readOnly: true,
@@ -88,7 +88,7 @@
                             data: "properties.dc:description",
                             renderer: orangeRenderer
                         }, {
-                            data: "properties.dc:creator", // from datasource
+                            data: "properties.dc:nature", // from datasource
                             editor: "select2",
                             select2Options: { // these options are the select2 initialization options
                                 formatResult: getDefaultLabel,
@@ -104,9 +104,21 @@
                                 allowClear: true,
                                 width: "resolve"
                             }
-                        }, {
+                        },
+                        {
+                            data: "properties.dc:valid",
+                            type: 'date',
+                            dateFormat: 'yy-mm-ddT00:00:00.000'
+                        } ,
+                        {
+                            data: "properties.dc:creator",
+                            readOnly: true,
+                            renderer: orangeRenderer
+                        }
+                    ,{
                             data: "properties.dc:created",
                             type: 'date',
+                            readOnly: true,
                             dateFormat: 'yy-mm-ddT00:00:00.000'
                         }
                         ],
@@ -120,9 +132,6 @@
                             if (change != null) {
                                 for (var i = 0; i < change.length; i++) {
                                     listToUpdate[(myData[change[i][0]].uid)] = myData[change[i][0]];
-
-
-
                                 }
                                 ht.render();
                             }
