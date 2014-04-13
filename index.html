@@ -1,4 +1,3 @@
-
 <html>
 <header>
     <script src="lib/jquery-1.10.2.js"></script>
@@ -13,22 +12,28 @@
 </header>
 
 <body>
-    <input id ="query" type="text" size="70" placeholder="SELECT * FROM Document"/>
-        <button onclick="drawTable(document.getElementById('query').value)">Execute</button>
-    <div id="example2" style="width: 980px; height: 300px; overflow: scroll"></div>
+    <input id="query" type="text" size="70" placeholder="SELECT * FROM Document" />
+    <button onclick="drawTable(document.getElementById('query').value)">Execute</button>
+    <div id="example2" style="width: 1200px; height: 550px; overflow: scroll"></div>
     <p>
         <button onclick="saveChangedDocuments()">Save</button>
     </p>
     <script>
-
-       function changeQuery(){};
         var listToUpdate = {};
 
         function getDefaultLabel(item) {
-            console.log(item);
             return item.label;
 
         }
+
+        var orangeRenderer = function (instance, td, row, col, prop, value, cellProperties) {
+            Handsontable.renderers.TextRenderer.apply(this, arguments);
+            if (listToUpdate[instance.getDataAtRowProp(row,"uid")] != null) {
+                $(td).css({
+                    background: 'orange'
+                });
+            }
+        };
 
         function saveChangedDocuments() {
             for (var key in listToUpdate) {
@@ -36,9 +41,10 @@
                     client.request("/id/" + key).put({
                         data: listToUpdate[key]
                     });
-                    console.log(listToUpdate[key].title);
                 }
             }
+            listToUpdate={};
+            ht.render();
         };
 
         function getVocabularyData(directoryName, callback) {
@@ -53,72 +59,83 @@
             baseURL: "http://localhost:8080/nuxeo",
             username: "Administrator",
             password: "Administrator",
+            timeout: 300000,
             schemas: "dublincore"
         };
         var client = new nuxeo.Client(connectInfo);
-        function drawTable(queryString){
-          console.log(queryString);
-        client.operation('Document.Query')
-            .params({
-                query: queryString
-            })
-            .execute(function (error, data) {
-             
-                if (error) {
-                    throw error;
-                }
-                var myData = data.entries
-                $("#example2").handsontable({
-                    data: myData,
-                    colHeaders: ['Id', 'Title', 'Date', 'Description', 'username'],
-                    columns: [{
-                        data: "uid",
-                         readOnly: true
-                    }, {
-                        data: "properties.dc:title",
-                         readOnly: true
-                    }, {
-                        data: "properties.dc:created",
-                        type: 'date',
-                        dateFormat: 'yy-mm-ddT00:00:00.000'
-                    }, {
-                        data: "properties.dc:description"
-                    }, {
-                        data: "properties.dc:creator", // from datasource
-                        editor: "select2",
-                        select2Options: { // these options are the select2 initialization options
-                            formatResult: getDefaultLabel,
-                            query: function (query) {
-                                getVocabularyData("nature", function (data) {
-                                    var results = [];
-                                    query.callback({
-                                        results: data
+
+        function drawTable(queryString) {
+            client.operation('Document.Query')
+                .params({
+                    query: queryString
+                })
+                .execute(function (error, data) {
+
+                    if (error) {
+                        console.log(error);
+                        throw error;
+                    }
+                    var myData = data.entries
+                    $("#example2").handsontable({
+                        data: myData,
+                        colHeaders: ['Title', 'Description', 'Creator', 'Date of creation'],
+                        colWidths: [200, 400, 120, 100],
+                        columns: [ {
+                            data: "properties.dc:title",
+                            readOnly: true,
+                            renderer: orangeRenderer
+                        }, {
+                            data: "properties.dc:description",
+                            renderer: orangeRenderer
+                        }, {
+                            data: "properties.dc:creator", // from datasource
+                            editor: "select2",
+                            select2Options: { // these options are the select2 initialization options
+                                formatResult: getDefaultLabel,
+                                query: function (query) {
+                                    getVocabularyData("nature", function (data) {
+                                        var results = [];
+                                        query.callback({
+                                            results: data
+                                        });
                                     });
-                                });
-                            },
-                            dropdownAutoWidth: true,
-                            allowClear: true,
-                            width: "resolve"
+                                },
+                                dropdownAutoWidth: true,
+                                allowClear: true,
+                                width: "resolve"
+                            }
+                        }, {
+                            data: "properties.dc:created",
+                            type: 'date',
+                            dateFormat: 'yy-mm-ddT00:00:00.000'
                         }
-                    }],
-                    rowHeaders: true,
-                    manualColumnResize: true,
-                    minSpareRows: 1,
-                    currentRowClassName: 'currentRow',
-                    currentColClassName: 'currentCol',
-                    contextMenu: [ "undo", "redo", "sep1", "sep2", "sep3"],
-                    afterChange: function (change, source) {
-                       if (change!=null){
-                        for (var i = 0; i < change.length; i++) {
-                            listToUpdate[(myData[change[i][0]].uid)] = myData[change[i][0]];
-                        }
-                      }
-                    },
-                    search: true
+                        ],
+                        rowHeaders: true,
+                        manualColumnResize: true,
+                        minSpareRows: 1,
+                        currentRowClassName: 'currentRow',
+                        currentColClassName: 'currentCol',
+                        contextMenu: ["undo", "redo", "sep1", "sep2", "sep3"],
+                        afterChange: function (change, source) {
+                            if (change != null) {
+                                for (var i = 0; i < change.length; i++) {
+                                    listToUpdate[(myData[change[i][0]].uid)] = myData[change[i][0]];
+
+
+
+                                }
+                                ht.render();
+                            }
+                        },
+                        search: true
+
+                    });
+                    ht = $("#example2").handsontable('getInstance');
 
                 });
-            });}
-  drawTable('SELECT * FROM Document');
+        }
+
+        drawTable('SELECT * FROM Document');
     </script>
 </body>
 
